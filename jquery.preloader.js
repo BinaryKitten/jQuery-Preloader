@@ -1,4 +1,4 @@
-/* jQuery.preloader - v0.96 - K Reeve aka BinaryKitten
+/* jQuery.preloader - v0.97.1 - K Reeve aka BinaryKitten
 *
 *    Preloads a list of images, or all css linked images or both
 *    $.preLoadImages(array imageList,fn callback)
@@ -14,6 +14,9 @@
 *
 *
 * ------------ Version History -----------------------------------
+* v0.97.1
+*    fixed accidentally removed img setting line.
+*
 * v0.97
 *    Attempted fix for @import and @font-face
 *
@@ -115,6 +118,7 @@
                     }
                     match = regex.exec(txt);
                     if (match != null) {
+                        img = match[1];
                         if (img.substring(0,4) == 'http') {
                             imageList[imageList.length] = img;
                         } else if ( match[1].substring(1,2) == '/') {
