@@ -14,6 +14,9 @@
 *
 *
 * ------------ Version History -----------------------------------
+* v0.97
+*    Attempted fix for @import and @font-face
+*
 * v0.96.1
 *   Cleaned up Tabulation
 *   
@@ -106,9 +109,12 @@
                 for (ruleIdx=0;ruleIdx<myRules.length;ruleIdx++) {
                     Rule = myRules[ruleIdx];
                     txt = Rule.cssText ? Rule.cssText : Rule.style.cssText;
+                    txt = $.trim(txt);
+                    if ('@' === txt.substr(0,1)) {
+                        continue;
+                    }
                     match = regex.exec(txt);
                     if (match != null) {
-                        img = match[1].substring(1,match[1].indexOf(')',1));
                         if (img.substring(0,4) == 'http') {
                             imageList[imageList.length] = img;
                         } else if ( match[1].substring(1,2) == '/') {
