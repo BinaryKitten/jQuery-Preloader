@@ -1,4 +1,4 @@
-/* jQuery.preloader - v0.97.1 - K Reeve aka BinaryKitten
+/* jQuery.preloader - v0.97.2 - K Reeve aka BinaryKitten
 *
 *    Preloads a list of images, or all css linked images or both
 *    $.preLoadImages(array imageList,fn callback)
@@ -14,6 +14,9 @@
 *
 *
 * ------------ Version History -----------------------------------
+* v0.97.2
+*    fix for naming conventions on css image preloader - Thanks Bruno Couto
+*
 * v0.97.1
 *    fixed accidentally removed img setting line.
 *
@@ -152,6 +155,8 @@
             callback();
         }
     };
+    $.preLoadCssImages = $.preLoadCSSImages;
+    
     $.preLoadAllImages = function(imageList,callback) {
         if (typeof imageList != 'undefined') {
             if ($.isFunction(imageList)) {
