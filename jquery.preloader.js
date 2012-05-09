@@ -65,35 +65,27 @@
 
 (function ($) {
     $.preLoadImages = function(imageList,callback) {
-        var pic = [], i, total, loaded = 0;
-        if (typeof imageList != 'undefined') {
-            if ($.isArray(imageList)) {
-                total = imageList.length; // used later
-                    for (i=0; i < total; i++) {
-                        pic[i] = new Image();
-                        pic[i].onload = function() {
-                            loaded++; // should never hit a race condition due to JS's non-threaded nature
-                            if (loaded == total) {
-                                if ($.isFunction(callback)) {
-                                    callback();
-                                }
-                            }
-                        };
-                        pic[i].src = imageList[i];
-                    }
-            } else {
-                pic[0] = new Image();
-                if ($.isFunction(callback)) {
-                    pic[0].onload = callback;
-                }
-                pic[0].src = imageList;
+        if (typeof imageList == "undefined"){ 
+            if($.isFunction(callback)) {
+                //nothing passed but we have a callback.. so run this now
+                //thanks to Evgeni Nobokov
+                callback();
             }
-        } else if ($.isFunction(callback)) {
-            //nothing passed but we have a callback.. so run this now
-            //thanks to Evgeni Nobokov
-            callback();
+            return;
         }
-        pic = undefined;
+    	var total,loaded=0;
+		total = imageList.length || 1;
+		$.each(imageList, function(i,val){
+			var i = $('<img>').load(function() {
+				loaded++;
+				$('#imgload').html(loaded+'/'+total);
+				if (loaded == total) {
+					if ($.isFunction(callback)) {
+						callback();
+					}
+				}
+			}).attr('src',val);
+		});
     };
     
     $.preLoadCSSImages = function(callback) {
