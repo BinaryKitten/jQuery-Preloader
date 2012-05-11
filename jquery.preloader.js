@@ -55,7 +55,7 @@
 *        Remade the preLoadImages from jQuery to DOM
 *
 * v0.6
-*         Fixed IE6 Compatability!
+*         Fixed IE6 Compatibility!
 *        Moved from jQuery to DOM
 *
 * v0.5
@@ -63,41 +63,54 @@
 *         Created secondary .preLoadImages to handle additionalimages and so it can be called on itself
 */
 
-(function ($) {
-    $.preLoadImages = function(imageList,callback) {
-        var pic = [], i, total, loaded = 0;
-        if (typeof imageList != 'undefined') {
-            if ($.isArray(imageList)) {
-                total = imageList.length; // used later
-                    for (i=0; i < total; i++) {
-                        pic[i] = new Image();
-                        pic[i].onload = function() {
-                            loaded++; // should never hit a race condition due to JS's non-threaded nature
-                            if (loaded == total) {
-                                if ($.isFunction(callback)) {
-                                    callback();
-                                }
-                            }
-                        };
-                        pic[i].src = imageList[i];
-                    }
-            } else {
-                pic[0] = new Image();
-                if ($.isFunction(callback)) {
-                    pic[0].onload = callback;
-                }
-                pic[0].src = imageList;
-            }
-        } else if ($.isFunction(callback)) {
+(function ($, undefined) { // isolates undefined
+
+    $.preLoadImages = _preload = function (imageList, callback, errorCallback) { // give an internal name to preload, so we can call it internally
+        if (!imageList && $.isFunction(callback)) {
             //nothing passed but we have a callback.. so run this now
             //thanks to Evgeni Nobokov
             callback();
+            return;
         }
-        pic = undefined;
+        
+        var total, loaded = 0;
+		total = imageList.length || 1;
+		
+        $.each(imageList, function(i, val){
+			$('<img>').load(function() {
+				loaded++;
+				$('#imgload').html(loaded+'/'+total);
+				loaded == total && $.isFunction(callback) && callback(); // calls callback if list is fully loaded
+			}).error(function(){
+				$.isFunction(errorCallback) && errorCallback(); // Note : calls errorCallback at EACH error (TODO, trigger only once ?)
+			}).attr('src',val);
+        });
     };
     
-    $.preLoadCSSImages = function(callback) {
-        var pic = [], i, imageList = [], loaded = 0, total, regex = /url\((?:"|')?(?!data:)([^)"']+)(?:"|')?\)/i,spl;
+    $.preLoadCssImages = $.preLoadCSSImages = function(callback, errorCallback){
+    	var imageList = _parseCssImages();
+    	_preload(imageList, callback, errorCallback);
+    }
+    
+    $.preLoadAllImages = function(imageList, callback, errorCallback) {
+        if (imageList != undefined) {
+            if ($.isFunction(imageList)) {
+                callback = imageList;
+            } else if (!$.isArray(imageList)) {
+                imageList = [imageList];
+            }
+        }else{
+        	imageList = [];
+        }
+        // AllImages parses CSS, returns a list of image. Then we merge it into one big array (TODO : remove duplicates ?)
+        var imageListCss = _parseCssImages();
+        $.extend(imageList, imageListCss);
+        _preload(imageList,callback, errorCallback);
+    }
+    
+    /* CSS parsing */
+    function _parseCssImages() {
+        var imageList = [], regex = /url\((?:"|')?(?!data:)([^)"']+)(?:"|')?\)/i,spl;
         var cssSheets = document.styleSheets, path,myRules='',Rule,match,txt,img,sheetIdx,ruleIdx;
         for (sheetIdx=0;sheetIdx < cssSheets.length;sheetIdx++){
             var sheet = cssSheets[sheetIdx];
@@ -106,11 +119,9 @@
             } else {
                 path = './';
             }
-            if (sheet.cssRules) {
-                myRules = sheet.cssRules;
-            } else if (sheet.rules) {
-                myRules = sheet.rules;
-            }
+            
+            myRules = sheet.cssRules || sheet.rules || [];
+
             if (myRules.length > 0) {
                 for (ruleIdx=0;ruleIdx<myRules.length;ruleIdx++) {
                     Rule = myRules[ruleIdx];
@@ -134,43 +145,7 @@
                 };
             } 
         };
-        
-        total = imageList.length; // used later
-        if (total > 0) {
-            for (i=0; i < total; i++) {
-                pic[i] = new Image();
-                pic[i].onload = function() {
-                    loaded++; // should never hit a race condition due to JS's non-threaded nature
-                    if (loaded == total) {
-                        if ($.isFunction(callback)) {
-                            callback();
-                        }
-                    }
-                };
-                pic[i].src = imageList[i];
-            }
-        } else if($.isFunction(callback)) {
-            //nothing found, but we have a callback.. so run this now
-            //thanks to Evgeni Nobokov
-            callback();
-        }
+        return imageList;
     };
-    $.preLoadCssImages = $.preLoadCSSImages;
     
-    $.preLoadAllImages = function(imageList,callback) {
-        if (typeof imageList != 'undefined') {
-            if ($.isFunction(imageList)) {
-                callback = imageList;
-            } else if (!$.isArray(imageList)) {
-                imageList = [imageList];
-            }
-        }
-        $.preLoadCSSImages(function(){
-            if (imageList.length > 0) {
-                $.preLoadImages(imageList,callback);
-            } else {
-                callback();
-            }
-        });
-    }
 })(jQuery);
